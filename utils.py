@@ -2,6 +2,10 @@
 #______________________________________________________________________________
 # Simple Data Structures: infinity, Dict, Struct
 
+import bisect
+import math
+
+
 infinity = 1.0e400
 
 
@@ -550,4 +554,71 @@ class FIFOQueue(Queue):
 Fig = {}
 
 
+class PriorityQueue(Queue):
+    """
+    Cola de prioridad simplificada que siempre ordena de menor a mayor (min).
+    Solo necesita la función f(x) para ordenar.
+    """
 
+    def __init__(self, f=lambda x: x):
+        self.A = []
+        self.f = f
+
+    def append(self, item):
+        # Insertamos manteniendo el orden según f(item)
+        bisect.insort(self.A, (self.f(item), item))
+
+    def __len__(self):
+        return len(self.A)
+
+    def pop(self):
+        # Como siempre es minimización, sacamos siempre el primero (índice 0)
+        return self.A.pop(0)[1]
+
+    def __contains__(self, item):
+        return any(item == pair[1] for pair in self.A)
+
+    def __getitem__(self, key):
+        for _, item in self.A:
+            if item == key:
+                return item
+
+    def __delitem__(self, key):
+        for i, (value, item) in enumerate(self.A):
+            if item == key:
+                self.A.pop(i)
+                return
+            
+class PriorityQueueHeuristic(Queue):
+    """A queue in which the item with minimum f(item) is always popped first."""
+
+    def __init__(self, order=min, f=lambda x: x):
+        self.A = []
+        self.order = order
+        self.f = f
+
+    def append(self, item):
+        bisect.insort(self.A, (self.f(item), item))
+
+    def __len__(self):
+        return len(self.A)
+
+    def pop(self):
+        if self.order == min:
+            return self.A.pop(0)[1]
+        else:
+            return self.A.pop()[1]
+
+    def __contains__(self, item):
+        return any(item == pair[1] for pair in self.A)
+
+    def __getitem__(self, key):
+        for _, item in self.A:
+            if item == key:
+                return item
+
+    def __delitem__(self, key):
+        for i, (value, item) in enumerate(self.A):
+            if item == key:
+                self.A.pop(i)
+                return

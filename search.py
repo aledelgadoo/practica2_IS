@@ -83,6 +83,11 @@ class Node:
             x = x.parent
         return result
 
+    def __lt__(self, node):
+        """Método para comparar dos nodos si tienen el mismo coste.
+        Se usa para desempatar en la cola de prioridad."""
+        return self.state < node.state
+    
     def expand(self, problem):
         """Return a list of nodes reachable from this node. [Fig. 3.8]"""
         return [Node(next, self, act,
@@ -136,7 +141,26 @@ def depth_first_graph_search(problem):
     """Search the deepest nodes in the search tree first. [p 74]"""
     return graph_search(problem, Stack())
 
+def ramificacion_acotacion(problem):
+    return graph_search(problem, PriorityQueue(lambda node: node.path_cost))
 
+def ramificacion_acotacion_subestimacion(problem):
+    """
+    Ramificación y Acotación con Subestimación (A*).
+    Ordena la cola por f(n) = g(n) + h(n).
+    """
+    # g(n) = node.path_cost (Coste real acumulado)
+    # h(n) = problem.h(node) (Heurística: distancia estimada al objetivo)
+    return graph_search(problem, PriorityQueue(lambda node: node.path_cost + problem.h(node)))
+
+"""def ramificacion_acotacion_subestimacion(problem):
+    f_eval = lambda node: node.path_cost + problem.h(node)
+    
+    # Creamos la frontera usando TU clase nueva y la función f_eval
+    fringe = PriorityQueueHeuristic(min, f_eval)
+    
+    return graph_search(problem, fringe)
+"""
 
 # _____________________________________________________________________________
 # The remainder of this file implements examples for the search algorithms.
@@ -280,3 +304,19 @@ class GPSProblem(Problem):
             return int(distance(locs[node.state], locs[self.goal]))
         else:
             return infinity
+
+class GPSProblemOverestimated(GPSProblem):
+    """
+    Problema específico para demostrar que una heurística que sobreestima
+    (no admisible) pierde la optimalidad.
+    """
+    
+    def h(self, node):
+        # En tu grafo 'romania', Sibiu es la clave 'S'
+        if node.state == 'S':
+            # La distancia real es aprox 253.
+            # Devolvemos 1000 para asustar al algoritmo y que no vaya por aquí.
+            return 1000 
+        
+        # Para cualquier otro nodo, usamos la lógica original (distancia euclídea)
+        return super().h(node)
